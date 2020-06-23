@@ -1,2 +1,2 @@
 install:
-   - ./gradlew clean setupDecompWorkspace build
+   - ./gradlew clean setupDecompWorkspace install
