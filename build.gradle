@@ -1,16 +1,22 @@
 buildscript {
     repositories {
         jcenter()
-        maven { url = "http://files.minecraftforge.net/maven" }
+        maven { url = "https://files.minecraftforge.net/maven" }
+        maven { url = "https://repo.spongepowered.org/maven" }
     }
     dependencies {
-        classpath 'net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT'
+        classpath "net.minecraftforge.gradle:ForgeGradle:2.3-SNAPSHOT"
+		classpath "org.spongepowered:mixingradle:0.6-SNAPSHOT"
     }
 }
 apply plugin: 'net.minecraftforge.gradle.forge'
+apply plugin: 'org.spongepowered.mixin'
 
 repositories {
     jcenter()
+    maven {
+	    url = "https://repo.spongepowered.org/maven"
+    }
     maven {
         url = "http://maven.blamejared.com"
     }
@@ -24,44 +30,17 @@ repositories {
         url = "http://maven.amadornes.com/"
     }
     maven {
-        url = "http://maven.ic2.player.to/"
-    }
-    maven {
         url = "http://maven.tterrag.com/"
     }
     maven {
-        url = "http://maven.epoxide.org/"
-    }
-    maven {
-        url = "https://maven.chaosfield.at/"
-    }
-    maven {
-        url = "http://maven.modmuss50.me/"
-    }
-    maven {
         url = "http://maven.covers1624.net/"
-    }
-    maven {
-        url = "https://dl.bintray.com/shinoow/maven/"
-    }
-    maven {
-        url = "http://maven.shadowfacts.net/"
-    }
-    maven {
-        url = "https://maven.mcmoddev.com/"
-    }
-    maven {
-        url = "http://maven.thiakil.com/"
-    }
-    maven {
-        url = "https://www.mod-buildcraft.com/maven/"
     }
     maven {
         url = "https://modmaven.k-4u.nl/" 
     }
 }
 
-version = "1.12.2-1.0.0.0"
+version = "1.12.2-2.0.0.0"
 group= "thelm.textevents"
 archivesBaseName = "TextEvents"
 
@@ -71,62 +50,60 @@ compileJava {
 }
 
 minecraft {
-    version = "1.12.2-14.23.4.2705"
+    version = "1.12.2-14.23.5.2847"
     runDir = "run"
-    mappings = "snapshot_20170624"
+    mappings = "stable_39"
     makeObfSourceJar = false
 }
 
-jar {
-    manifest {
-        attributes 'FMLCorePlugin': 'thelm.textevents.asm.TextEventsLoadingPlugin'
-        attributes 'FMLCorePluginContainsFMLMod': 'true'
-    }
+configurations {
+    shade
+    compile.extendsFrom shade
 }
 
 dependencies {
-    deobfCompile "mezz.jei:jei_1.12.2:4.9.2.196" 
-    deobfCompile "slimeknights.mantle:Mantle:1.12-1.3.2.24"
-    deobfCompile "slimeknights:TConstruct:1.12.2-2.9.1.65"
-    deobfCompile "cofh:RedstoneFlux:1.12-2.0.1.2:universal"
-    deobfCompile "codechicken:CodeChickenLib:1.12.2-3.1.7.340:universal"
-    deobfCompile("cofh:CoFHCore:1.12.2-4.4.0.10:universal") {
+    shade("org.spongepowered:mixin:0.7.11-SNAPSHOT") {
         transitive = false
     }
-    deobfCompile("cofh:CoFHWorld:1.12.2-1.1.1.12:universal") {
-        transitive = false
-    }
-    deobfCompile("cofh:ThermalFoundation:1.12.2-2.4.0.14:universal") {
-        transitive = false
-    }
-    deobfCompile("cofh:ThermalExpansion:1.12.2-5.4.0.20:universal") {
-        transitive = false
-    }
-    deobfCompile "com.enderio.core:EnderCore:1.12.2-0.5.20"
-    deobfCompile("appeng:appliedenergistics2:rv5-stable-11") {
-        transitive = false
-    }
+
+    deobfCompile "mezz.jei:jei_1.12.2:4.15.0.273"
+    deobfCompile "codechicken:CodeChickenLib:1.12.2-3.2.3.357:universal"
+    deobfCompile "com.enderio.core:EnderCore:1.12.2-0.5.50"
     deobfCompile "mcp.mobius.waila:Hwyla:1.8.25-B40_1.12"
 }
 
-processResources
-{
+processResources {
 }
 
-task deobfJar(type: Jar) {
-    from sourceSets.main.output
-    classifier = 'deobf'
-    manifest {
-        attributes 'FMLCorePlugin': 'thelm.textevents.asm.TextEventsLoadingPlugin'
-        attributes 'FMLCorePluginContainsFMLMod': 'true'
+def modManifest = {
+    attributes "FMLCorePlugin": "thelm.textevents.core.TextEventsLoadingPlugin"
+    attributes "TweakClass": "org.spongepowered.asm.launch.MixinTweaker"
+    attributes "TweakOrder": 0
+    attributes "FMLCorePluginContainsFMLMod": true
+    attributes "ForceLoadAsMod": true
+}
+
+jar {
+    manifest modManifest
+	
+	configurations.shade.each { dep ->
+        from(project.zipTree(dep)) {
+            rename 'LICENSE.txt', 'org/spongepowered/LICENSE.txt'
+
+            exclude 'META-INF/*.SF'
+            exclude 'META-INF/*.RSA'
+            exclude 'META-INF/*.MF'
+
+            exclude '**/*.html'
+        }
     }
 }
 
-artifacts {
-    archives deobfJar
+mixin {
+    add sourceSets.main, "mixins.textevents.refmap.json"
 }
 
-//copied from EnderCore, please forgive me
+//copied from EnderCore
 String getCN() {
     def firsts = ['Donald', 'Lex', 'Mike', 'Arthur', 'Bridget', 'Dorian', 'Ford', 'Guy', 'James', 'Jessica', 'John', 'Michael', 'Robinson', 'Zaphod', 'Bell', 'Penelope']
     def lasts = ['Trump', 'Luthor', 'Meyers', 'Dent', 'Jones', 'Gray', 'Prefect', 'Montag', 'Moriarty', 'Simpson', 'Watson', 'Smith', 'Corleone', 'Crusoe', 'Beeblebrox', 'Cranel', 'Akk']

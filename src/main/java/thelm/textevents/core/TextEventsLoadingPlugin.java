@@ -1,4 +1,4 @@
-package thelm.textevents.asm;
+package thelm.textevents.core;
 
 import java.util.Map;
 
@@ -14,7 +14,7 @@ public class TextEventsLoadingPlugin implements IFMLLoadingPlugin {
 
 	@Override
 	public String[] getASMTransformerClass() {
-		return new String[] {"thelm.textevents.asm.TextEventsClassTransformer"};
+		return new String[0];
 	}
 
 	@Override
@@ -24,7 +24,7 @@ public class TextEventsLoadingPlugin implements IFMLLoadingPlugin {
 
 	@Override
 	public String getSetupClass() {
-		return null;
+		return TextEventsFMLCallHook.class.getName();
 	}
 
 	@Override
