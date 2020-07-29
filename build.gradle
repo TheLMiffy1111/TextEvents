@@ -18,16 +18,19 @@ repositories {
 	    url = "https://repo.spongepowered.org/maven"
     }
     maven {
-        url = "http://maven.blamejared.com"
+        url = "https://maven.blamejared.com"
     }
     maven {
-        url = "http://dvs1.progwml6.com/files/maven"
+        url = "https://dvs1.progwml6.com/files/maven"
     }
     maven {
-        url = "http://maven.tterrag.com/"
+        url = "https://maven.tterrag.com/"
     }
     maven {
-        url = "http://maven.covers1624.net/"
+        url = "https://maven.covers1624.net/"
+    }
+    maven {
+        url = "https://jitpack.io/" 
     }
     maven {
         url = "https://modmaven.k-4u.nl/" 
@@ -35,7 +38,7 @@ repositories {
 }
 
 version = "1.12.2-2.0.0.0"
-group= "thelm.textevents"
+group = "thelm.textevents"
 archivesBaseName = "TextEvents"
 
 sourceCompatibility = targetCompatibility = "1.8"
@@ -50,13 +53,11 @@ minecraft {
     makeObfSourceJar = false
 }
 
-configurations {
-    shade
-    compile.extendsFrom shade
-}
-
 dependencies {
-    shade("org.spongepowered:mixin:0.7.11-SNAPSHOT") {
+    implementation("org.spongepowered:mixin:0.8") {
+        transitive = false
+    }
+    implementation("com.github.LXGaming:MixinBootstrap:v1.0.3") {
         transitive = false
     }
 
@@ -68,60 +69,6 @@ dependencies {
 processResources {
 }
 
-def modManifest = {
-    attributes "FMLCorePlugin": "thelm.textevents.core.TextEventsLoadingPlugin"
-    attributes "TweakClass": "org.spongepowered.asm.launch.MixinTweaker"
-    attributes "TweakOrder": 0
-    attributes "FMLCorePluginContainsFMLMod": true
-    attributes "ForceLoadAsMod": true
-}
-
-jar {
-    manifest modManifest
-	
-	configurations.shade.each { dep ->
-        from(project.zipTree(dep)) {
-            rename 'LICENSE.txt', 'org/spongepowered/LICENSE.txt'
-
-            exclude 'META-INF/*.SF'
-            exclude 'META-INF/*.RSA'
-            exclude 'META-INF/*.MF'
-
-            exclude '**/*.html'
-        }
-    }
-}
-
 mixin {
     add sourceSets.main, "mixins.textevents.refmap.json"
 }
-
-//copied from EnderCore
-String getCN() {
-    def firsts = ['Donald', 'Lex', 'Mike', 'Arthur', 'Bridget', 'Dorian', 'Ford', 'Guy', 'James', 'Jessica', 'John', 'Michael', 'Robinson', 'Zaphod', 'Bell', 'Penelope']
-    def lasts = ['Trump', 'Luthor', 'Meyers', 'Dent', 'Jones', 'Gray', 'Prefect', 'Montag', 'Moriarty', 'Simpson', 'Watson', 'Smith', 'Corleone', 'Crusoe', 'Beeblebrox', 'Cranel', 'Akk']
-    def rand = new Random()
-    return firsts[rand.nextInt(firsts.size())] + ' ' + lasts[rand.nextInt(lasts.size())]
-}
-
-task mkKeyStore(type:Exec) {
-   workingDir projectDir
-   commandLine 'keytool', '-genkey', '-alias', 'signFiles', '-keystore', 'testore.jks', '-storepass', '123456', '-noprompt', '-dname', 'CN='+getCN(), '-keypass', '123456'
-}
-
-task signJar(type: SignJar, dependsOn: reobfJar) {
-    inputFile = jar.archivePath
-    outputFile = jar.archivePath
-    keyStore = 'testore.jks'
-    alias = 'signFiles'
-    storePass = '123456'
-    keyPass = '123456'
-}
-
-task rmKeyStore(type: Delete) {
-  delete 'testore.jks'
-}
-
-build.dependsOn rmKeyStore
-rmKeyStore.dependsOn signJar
-signJar.dependsOn mkKeyStore
